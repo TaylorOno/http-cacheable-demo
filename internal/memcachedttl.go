@@ -3,7 +3,6 @@ package internal
 import (
 	"bufio"
 	"bytes"
-	"encoding/gob"
 	"fmt"
 	"github.com/bradfitz/gomemcache/memcache"
 	"log"
@@ -29,45 +28,36 @@ func (m *memCacheClient) Get(s string) (*http.Response, bool) {
 		return nil, false
 	}
 
-	var item item
-	dec := gob.NewDecoder(bytes.NewReader(memCacheItem.Value))
-	err = dec.Decode(&item)
-	if err  != nil  {
-		log.Print(fmt.Sprintf("error:%s", err))
-		return nil, false
-	}
-
-	if time.Now().UnixNano() > item.Expiration {
-		log.Print(fmt.Sprintf("error:%s", "expired soft ttl"))
-		return nil, false
-	}
-
-	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(item.Response)), nil)
+	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(memCacheItem.Value)), nil)
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 		return nil, false
 	}
 
-	log.Print("memcache get")
+	expires, err := http.ParseTime(resp.Header.Get("Expires"))
+	if err != nil || time.Now().UTC().After(expires) {
+		log.Print(fmt.Sprintf("error:%s", "expired soft ttl"))
+		return resp, false
+	}
+
+	log.Print("memcached get")
 	return resp, true
 }
 
 func (m *memCacheClient) Set(s string, response *http.Response, duration time.Duration) {
+	if duration > 0 {
+		cacheUntil := time.Now().UTC().Add(duration).Format(http.TimeFormat)
+		response.Header.Set("Expires", cacheUntil)
+	}
+
 	responseBytes, err := httputil.DumpResponse(response, true)
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 	}
 
-	var itemBytes bytes.Buffer
-	enc := gob.NewEncoder(&itemBytes)
-	err = enc.Encode(item{Expiration: time.Now().Add(duration).UnixNano(), Response: responseBytes})
+	err = m.client.Set(&memcache.Item{Key: s, Value: responseBytes})
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 	}
-
-	err = m.client.Set(&memcache.Item{Key: s, Value: itemBytes.Bytes()})
-	if err != nil {
-		log.Print(fmt.Sprintf("error:%s", err))
-	}
-	log.Print("memcache set")
+	log.Print("memcached set")
 }

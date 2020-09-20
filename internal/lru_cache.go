@@ -26,12 +26,12 @@ func (c *lruCache) Get(s string) (*http.Response, bool) {
 		return nil, false
 	}
 
-	item, ok := value.([]byte)
+	respBytes, ok := value.([]byte)
 	if !ok {
 		return nil, false
 	}
 
-	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(item)), nil)
+	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(respBytes)), nil)
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 		return nil, false

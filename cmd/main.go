@@ -12,13 +12,14 @@ func main() {
 	ttlCache := internal.NewTTLCache(5*time.Second)
 	lruCache := internal.NewLRUCache(5)
 	lruttlCache := internal.NewLRUTTLCache(5)
+	memCache := internal.NewMemCacheClient()
 
-	goCacheClient := cacheable.NewCacheableMiddleware(ttlCache, 5)
-	lruCacheClient := cacheable.NewCacheableMiddleware(lruCache, 5)
-	lruttlCacheClient := cacheable.NewCacheableMiddleware(lruttlCache, 5)
-	multiStageClient := cacheable.NewCacheableMiddleware(internal.NewMultiStageCache(ttlCache, lruttlCache), 5)
+	goCacheClient := cacheable.NewCacheableMiddleware(ttlCache, 60)
+	lruCacheClient := cacheable.NewCacheableMiddleware(lruCache, 60)
+	lruttlCacheClient := cacheable.NewCacheableMiddleware(lruttlCache, 60)
+	memCacheClient := cacheable.NewCacheableMiddleware(memCache, 60)
+	multiStageClient := cacheable.NewCacheableMiddleware(internal.NewMultiStageCache(ttlCache, memCache), 60)
 
-	memCacheClient := cacheable.NewCacheableMiddleware(internal.NewMemCacheClient(), 5)
 
 	server := routes.Server{
 		GoCacheClient:     goCacheClient(&http.Client{}),

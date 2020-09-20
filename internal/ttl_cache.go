@@ -25,18 +25,18 @@ func (c *ttlCache) Get(s string) (*http.Response, bool) {
 		return nil, false
 	}
 
-	item, ok := value.([]byte)
+	respBytes, ok := value.([]byte)
 	if !ok {
 		return nil, false
 	}
 
-	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(item)), nil)
+	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(respBytes)), nil)
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 		return nil, false
 	}
 
-	log.Print("gocahe get")
+	log.Print("gocache get")
 	return resp, true
 }
 
@@ -46,6 +46,6 @@ func (c *ttlCache) Set(s string, response *http.Response, duration time.Duration
 		log.Print(fmt.Sprintf("error:%s", err))
 	}
 
-	log.Print("gocahe set")
-	c.cache.Set(s, responseBytes, duration)
+	log.Print("gocache set")
+	c.cache.SetDefault(s, responseBytes)
 }

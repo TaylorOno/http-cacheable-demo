@@ -23,10 +23,11 @@ func (m *multiStageCache) Get(s string) (*http.Response, bool) {
 
 	result, ok = m.l2Cache.Get(s)
 	if ok {
+		m.l1Cache.Set(s, result, -1)
 		return result, ok
 	}
 
-	return nil, false
+	return result, false
 }
 
 func (m *multiStageCache) Set(s string, response *http.Response, duration time.Duration) {
