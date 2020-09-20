@@ -1,0 +1,51 @@
+package internal
+
+import (
+	"bufio"
+	"bytes"
+	"fmt"
+	lru "github.com/hashicorp/golang-lru"
+	"log"
+	"net/http"
+	"net/http/httputil"
+	"time"
+)
+
+type lruCache struct {
+	cache *lru.Cache
+}
+
+func NewLRUCache(size int) *lruCache {
+	cache, _ := lru.New(size)
+	return &lruCache{cache: cache}
+}
+
+func (c *lruCache) Get(s string) (*http.Response, bool) {
+	value, ok := c.cache.Get(s)
+	if !ok {
+		return nil, false
+	}
+
+	item, ok := value.([]byte)
+	if !ok {
+		return nil, false
+	}
+
+	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(item)), nil)
+	if err != nil {
+		log.Print(fmt.Sprintf("error:%s", err))
+		return nil, false
+	}
+
+	log.Print("lru get")
+	return resp, true
+}
+
+func (c *lruCache) Set(s string, response *http.Response, duration time.Duration) {
+	responseBytes, err := httputil.DumpResponse(response, true)
+	if err != nil {
+		log.Print(fmt.Sprintf("error:%s", err))
+	}
+	log.Print("lru set")
+	c.cache.Add(s, responseBytes)
+}

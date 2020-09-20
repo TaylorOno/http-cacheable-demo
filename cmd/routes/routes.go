@@ -1,9 +1,7 @@
 package routes
 
 import (
-	"compress/gzip"
-	"io/ioutil"
-	"log"
+	"github.com/TaylorOno/http-cacheable-demo/internal"
 	"net/http"
 	"strings"
 )
@@ -16,6 +14,8 @@ type Server struct {
 	GoCacheClient     Client
 	LRUCacheClient    Client
 	LRUTTLCacheClient Client
+	MemCacheClient    Client
+	MultiStageClient  Client
 }
 
 func (s *Server) GoCache(w http.ResponseWriter, req *http.Request) {
@@ -30,22 +30,8 @@ func (s *Server) GoCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Uncompressed {
-		defer resp.Body.Close()
-		result, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
-
-	if !resp.Uncompressed {
-		zipReader, err := gzip.NewReader(resp.Body)
-		defer zipReader.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-		result, err = ioutil.ReadAll(zipReader)
+	if resp.Body != nil {
+		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -69,22 +55,8 @@ func (s *Server) LRUCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Uncompressed {
-		defer resp.Body.Close()
-		result, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
-
-	if !resp.Uncompressed {
-		zipReader, err := gzip.NewReader(resp.Body)
-		defer zipReader.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-		result, err = ioutil.ReadAll(zipReader)
+	if resp.Body != nil {
+		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -108,22 +80,58 @@ func (s *Server) LRUTTLCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Uncompressed {
-		defer resp.Body.Close()
-		result, err = ioutil.ReadAll(resp.Body)
+	if resp.Body != nil {
+		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
 
-	if !resp.Uncompressed {
-		zipReader, err := gzip.NewReader(resp.Body)
-		defer zipReader.Close()
+	w.WriteHeader(resp.StatusCode)
+	w.Write(result)
+	return
+}
+
+func (s *Server) MemCache(w http.ResponseWriter, req *http.Request) {
+	proxyRequest, _ := http.NewRequest(req.Method, "https://reddit.com", req.Body)
+	proxyRequest.Header = req.Header
+	proxyRequest.URL.Path = strings.Replace(req.URL.Path, "/memCached", "", -1)
+	proxyRequest.URL.RawQuery = req.URL.RawQuery
+	resp, err := s.MemCacheClient.Do(proxyRequest)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var result []byte
+	if resp.Body != nil {
+		result, err = internal.ReadBody(resp)
 		if err != nil {
-			log.Fatal(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
-		result, err = ioutil.ReadAll(zipReader)
+	}
+
+	w.WriteHeader(resp.StatusCode)
+	w.Write(result)
+	return
+}
+
+func (s *Server) MultiStageCache(w http.ResponseWriter, req *http.Request) {
+	proxyRequest, _ := http.NewRequest(req.Method, "https://reddit.com", req.Body)
+	proxyRequest.Header = req.Header
+	proxyRequest.URL.Path = strings.Replace(req.URL.Path, "/multiStage", "", -1)
+	proxyRequest.URL.RawQuery = req.URL.RawQuery
+	resp, err := s.MultiStageClient.Do(proxyRequest)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var result []byte
+	if resp.Body != nil {
+		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
