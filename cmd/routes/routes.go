@@ -1,9 +1,10 @@
 package routes
 
 import (
-	"github.com/TaylorOno/http-cacheable-demo/internal"
 	"net/http"
 	"strings"
+
+	"github.com/TaylorOno/http-cacheable-demo/internal"
 )
 
 type Client interface {
@@ -30,7 +31,7 @@ func (s *Server) GoCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Body != nil {
+	if resp.StatusCode == 200 && resp.Body != nil {
 		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -55,7 +56,7 @@ func (s *Server) LRUCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Body != nil {
+	if resp.StatusCode == 200 && resp.Body != nil {
 		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -80,7 +81,7 @@ func (s *Server) LRUTTLCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Body != nil {
+	if resp.StatusCode == 200 && resp.Body != nil {
 		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -105,7 +106,7 @@ func (s *Server) MemCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Body != nil {
+	if resp.StatusCode == 200 && resp.Body != nil {
 		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -130,7 +131,7 @@ func (s *Server) MultiStageCache(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var result []byte
-	if resp.Body != nil {
+	if resp.StatusCode == 200 && resp.Body != nil {
 		result, err = internal.ReadBody(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

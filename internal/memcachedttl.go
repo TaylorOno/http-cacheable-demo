@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/bradfitz/gomemcache/memcache"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 type memCacheClient struct {
@@ -28,7 +29,7 @@ func (m *memCacheClient) Get(s string) (*http.Response, bool) {
 		return nil, false
 	}
 
-	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(memCacheItem.Value)), nil)
+	resp, err := http.ReadResponse(bufio.NewReader(bytes.NewReader(memCacheItem.Value)), nil)
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 		return nil, false

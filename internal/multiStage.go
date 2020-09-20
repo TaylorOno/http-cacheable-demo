@@ -1,9 +1,10 @@
 package internal
 
 import (
-	cacheable "github.com/TaylorOno/http-cacheable"
 	"net/http"
 	"time"
+
+	cacheable "github.com/TaylorOno/http-cacheable"
 )
 
 type multiStageCache struct {
@@ -31,6 +32,6 @@ func (m *multiStageCache) Get(s string) (*http.Response, bool) {
 }
 
 func (m *multiStageCache) Set(s string, response *http.Response, duration time.Duration) {
-	m.l1Cache.Set(s,response, duration)
-	m.l2Cache.Set(s,response, duration)
+	m.l1Cache.Set(s, response, duration)
+	m.l2Cache.Set(s, response, duration)
 }

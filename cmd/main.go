@@ -1,25 +1,25 @@
 package main
 
 import (
+	"net/http"
+	"time"
+
 	cacheable "github.com/TaylorOno/http-cacheable"
 	"github.com/TaylorOno/http-cacheable-demo/cmd/routes"
 	"github.com/TaylorOno/http-cacheable-demo/internal"
-	"net/http"
-	"time"
 )
 
 func main() {
-	ttlCache := internal.NewTTLCache(5*time.Second)
+	ttlCache := internal.NewTTLCache(5 * time.Second)
 	lruCache := internal.NewLRUCache(5)
 	lruttlCache := internal.NewLRUTTLCache(5)
 	memCache := internal.NewMemCacheClient()
 
-	goCacheClient := cacheable.NewCacheableMiddleware(ttlCache, 60)
-	lruCacheClient := cacheable.NewCacheableMiddleware(lruCache, 60)
-	lruttlCacheClient := cacheable.NewCacheableMiddleware(lruttlCache, 60)
-	memCacheClient := cacheable.NewCacheableMiddleware(memCache, 60)
-	multiStageClient := cacheable.NewCacheableMiddleware(internal.NewMultiStageCache(ttlCache, memCache), 60)
-
+	goCacheClient := cacheable.NewCacheableMiddleware(ttlCache, 60, cacheable.StatusCodeValidator)
+	lruCacheClient := cacheable.NewCacheableMiddleware(lruCache, 60, cacheable.StatusCodeValidator)
+	lruttlCacheClient := cacheable.NewCacheableMiddleware(lruttlCache, 60, cacheable.StatusCodeValidator)
+	memCacheClient := cacheable.NewCacheableMiddleware(memCache, 60, cacheable.StatusCodeValidator)
+	multiStageClient := cacheable.NewCacheableMiddleware(internal.NewMultiStageCache(ttlCache, memCache), 60, cacheable.StatusCodeValidator)
 
 	server := routes.Server{
 		GoCacheClient:     goCacheClient(&http.Client{}),

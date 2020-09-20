@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	lru "github.com/hashicorp/golang-lru"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	lru "github.com/hashicorp/golang-lru"
 )
 
 type lruCache struct {
@@ -31,7 +32,7 @@ func (c *lruCache) Get(s string) (*http.Response, bool) {
 		return nil, false
 	}
 
-	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(respBytes)), nil)
+	resp, err := http.ReadResponse(bufio.NewReader(bytes.NewReader(respBytes)), nil)
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 		return nil, false

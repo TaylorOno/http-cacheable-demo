@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	lru "github.com/hashicorp/golang-lru"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	lru "github.com/hashicorp/golang-lru"
 )
 
 type lruttlCache struct {
@@ -61,4 +62,3 @@ func (c *lruttlCache) Set(s string, response *http.Response, duration time.Durat
 	log.Print("lruttl set")
 	c.cache.Add(s, responseBytes)
 }
-

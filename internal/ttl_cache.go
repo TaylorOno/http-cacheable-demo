@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/patrickmn/go-cache"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
 type ttlCache struct {
@@ -30,7 +31,7 @@ func (c *ttlCache) Get(s string) (*http.Response, bool) {
 		return nil, false
 	}
 
-	resp, err :=http.ReadResponse(bufio.NewReader(bytes.NewReader(respBytes)), nil)
+	resp, err := http.ReadResponse(bufio.NewReader(bytes.NewReader(respBytes)), nil)
 	if err != nil {
 		log.Print(fmt.Sprintf("error:%s", err))
 		return nil, false

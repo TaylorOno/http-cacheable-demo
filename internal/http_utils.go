@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func ReadBody(resp *http.Response) ([]byte, error){
+func ReadBody(resp *http.Response) ([]byte, error) {
 	if !resp.Uncompressed {
 		return uncompressAndRead(resp.Body)
 	}
